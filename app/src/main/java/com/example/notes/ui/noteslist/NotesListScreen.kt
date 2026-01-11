@@ -1,5 +1,6 @@
 package com.example.notes.ui.noteslist
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,13 +17,17 @@ import com.example.notes.domain.model.Note
 
 @Composable
 fun NotesListScreen(
-    viewModel: NotesListViewModel
+    viewModel: NotesListViewModel,
+    onCreateNote: () -> Unit,
+    onEditNote: (Note) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val notes by viewModel.notes.collectAsState()
 
     Scaffold(
+        modifier = modifier,
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* TODO: create note */ }) {
+            FloatingActionButton(onClick = onCreateNote) {
                 Icon(Icons.Default.Add, contentDescription = "Add note")
             }
         }
@@ -33,11 +38,13 @@ fun NotesListScreen(
         } else {
             NotesList(
                 notes = notes,
+                onEditNote = onEditNote,
                 modifier = Modifier.padding(padding)
             )
         }
     }
 }
+
 
 @Composable
 private fun EmptyState(modifier: Modifier = Modifier) {
@@ -57,6 +64,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 @Composable
 private fun NotesList(
     notes: List<Note>,
+    onEditNote: (Note) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -65,15 +73,23 @@ private fun NotesList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(notes) { note ->
-            NoteItem(note)
+            NoteItem(
+                note = note,
+                onClick = onEditNote
+            )
         }
     }
 }
 
 @Composable
-private fun NoteItem(note: Note) {
+private fun NoteItem(
+    note: Note,
+    onClick: (Note) -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick(note) },
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

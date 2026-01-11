@@ -1,17 +1,38 @@
 package com.example.notes
 
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import com.example.notes.domain.model.Note
+import com.example.notes.domain.repository.NoteRepository
+import com.example.notes.ui.editor.NoteEditorScreen
+import com.example.notes.ui.editor.NoteEditorViewModel
 import com.example.notes.ui.noteslist.NotesListScreen
 import com.example.notes.ui.noteslist.NotesListViewModel
 
 @Composable
 fun NotesApp(
-    viewModel: NotesListViewModel,
-    modifier: Modifier = Modifier
+    isEditing: Boolean,
+    listViewModel: NotesListViewModel,
+    editingNote: Note?,
+    onCreateNote: () -> Unit,
+    onEditNote: (Note) -> Unit,
+    onCloseEditor: () -> Unit,
+    repository: NoteRepository
 ) {
-    Scaffold(modifier = modifier) {
-        NotesListScreen(viewModel = viewModel)
+    if (isEditing) {
+        val editorViewModel = NoteEditorViewModel(
+            repository = repository,
+            existingNote = editingNote
+        )
+
+        NoteEditorScreen(
+            viewModel = editorViewModel,
+            onDone = onCloseEditor
+        )
+    } else {
+        NotesListScreen(
+            viewModel = listViewModel,
+            onCreateNote = onCreateNote,
+            onEditNote = onEditNote
+        )
     }
 }
