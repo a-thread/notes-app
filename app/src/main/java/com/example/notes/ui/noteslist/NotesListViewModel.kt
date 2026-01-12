@@ -25,6 +25,7 @@ class NotesListViewModel(
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = emptyList()
             )
+    private var recentlyDeletedNote: Note? = null
 
     init {
         insertTestNoteIfEmpty()
@@ -54,6 +55,22 @@ class NotesListViewModel(
             )
 
             repository.saveNote(testNote)
+        }
+    }
+
+    fun deleteNote(note: Note) {
+        viewModelScope.launch {
+            recentlyDeletedNote = note
+            repository.deleteNote(note.id)
+        }
+    }
+
+    fun undoDelete() {
+        recentlyDeletedNote?.let { note ->
+            viewModelScope.launch {
+                repository.saveNote(note)
+                recentlyDeletedNote = null
+            }
         }
     }
 }

@@ -6,8 +6,7 @@ import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.NoteBody
 import com.example.notes.domain.model.NoteType
 import com.example.notes.domain.repository.NoteRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
@@ -31,38 +30,60 @@ class NoteEditorViewModel(
     )
     val body: StateFlow<NoteBody> = _body
 
+    init {
+        autosave()
+    }
+
+    // ---------- UI events ----------
+
     fun onTitleChange(newTitle: String) {
         _title.value = newTitle
     }
 
     fun onTextChange(text: String) {
-        _body.value = NoteBody.Text(text)
         _type.value = NoteType.TEXT
+        _body.value = NoteBody.Text(text)
     }
 
     fun onBulletedListChange(items: List<String>) {
-        _body.value = NoteBody.BulletedList(items)
         _type.value = NoteType.BULLETED_LIST
+        _body.value = NoteBody.BulletedList(items)
     }
 
-    fun saveNote() {
-        viewModelScope.launch {
-            val now = Instant.now()
+    // ---------- Autosave ----------
 
-            val note = Note(
-                id = noteId,
-                userId = userId,
-                title = title.value.ifBlank { "Untitled" },
-                type = type.value,
-                body = body.value,
-                createdAt = existingNote?.createdAt ?: now,
-                createdBy = existingNote?.createdBy ?: userId,
-                updatedAt = now,
-                updatedBy = userId,
-                isPublic = false
-            )
-
-            repository.saveNote(note)
+    private fun autosave() {
+        combine(
+            title,
+            type,
+            body
+        ) { title, type, body ->
+            Triple(title, type, body)
         }
+            .debounce(500) // ⏳ wait for user to pause typing
+            .distinctUntilChanged()
+            .onEach {
+                saveInternal()
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private suspend fun saveInternal() {
+        val now = Instant.now()
+
+        val note = Note(
+            id = noteId,
+            userId = userId,
+            title = title.value.ifBlank { "Untitled" },
+            type = type.value,
+            body = body.value,
+            createdAt = existingNote?.createdAt ?: now,
+            createdBy = existingNote?.createdBy ?: userId,
+            updatedAt = now,
+            updatedBy = userId,
+            isPublic = false
+        )
+
+        repository.saveNote(note)
     }
 }

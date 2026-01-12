@@ -3,6 +3,8 @@ package com.example.notes.ui.editor
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -26,14 +28,9 @@ fun NoteEditorScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Edit note") },
-                actions = {
-                    TextButton(
-                        onClick = {
-                            viewModel.saveNote()
-                            onDone()
-                        }
-                    ) {
-                        Text("Save")
+                navigationIcon = {
+                    IconButton(onClick = onDone) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -48,13 +45,16 @@ fun NoteEditorScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
+            // ---------- Title ----------
             OutlinedTextField(
                 value = title,
                 onValueChange = viewModel::onTitleChange,
                 label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
 
+            // ---------- Body ----------
             when (type) {
                 NoteType.TEXT -> TextEditor(
                     text = (body as NoteBody.Text).text,
@@ -67,19 +67,20 @@ fun NoteEditorScreen(
                 )
             }
 
+            // ---------- Type switcher ----------
             TypeSwitcher(
                 currentType = type,
-                onTypeChange = {
-                    if (it == NoteType.TEXT) {
-                        viewModel.onTextChange("")
-                    } else {
-                        viewModel.onBulletedListChange(emptyList())
-                    }
+                onSwitchToText = {
+                    viewModel.onTextChange("")
+                },
+                onSwitchToList = {
+                    viewModel.onBulletedListChange(emptyList())
                 }
             )
         }
     }
 }
+
 @Composable
 private fun TextEditor(
     text: String,
@@ -91,7 +92,7 @@ private fun TextEditor(
         label = { Text("Note") },
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp),
+            .heightIn(min = 200.dp),
         maxLines = Int.MAX_VALUE
     )
 }
@@ -101,13 +102,15 @@ private fun BulletedListEditor(
     items: List<String>,
     onItemsChange: (List<String>) -> Unit
 ) {
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         itemsIndexed(items) { index, item ->
             OutlinedTextField(
                 value = item,
-                onValueChange = {
+                onValueChange = { newValue ->
                     val updated = items.toMutableList()
-                    updated[index] = it
+                    updated[index] = newValue
                     onItemsChange(updated)
                 },
                 label = { Text("Item ${index + 1}") },
@@ -116,9 +119,11 @@ private fun BulletedListEditor(
         }
 
         item {
-            TextButton(onClick = {
-                onItemsChange(items + "")
-            }) {
+            TextButton(
+                onClick = {
+                    onItemsChange(items + "")
+                }
+            ) {
                 Text("+ Add item")
             }
         }
@@ -128,18 +133,19 @@ private fun BulletedListEditor(
 @Composable
 private fun TypeSwitcher(
     currentType: NoteType,
-    onTypeChange: (NoteType) -> Unit
+    onSwitchToText: () -> Unit,
+    onSwitchToList: () -> Unit
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FilterChip(
             selected = currentType == NoteType.TEXT,
-            onClick = { onTypeChange(NoteType.TEXT) },
+            onClick = onSwitchToText,
             label = { Text("Text") }
         )
 
         FilterChip(
             selected = currentType == NoteType.BULLETED_LIST,
-            onClick = { onTypeChange(NoteType.BULLETED_LIST) },
+            onClick = onSwitchToList,
             label = { Text("List") }
         )
     }
