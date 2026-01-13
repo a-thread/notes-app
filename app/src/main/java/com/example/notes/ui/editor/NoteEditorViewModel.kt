@@ -1,13 +1,12 @@
 package com.example.notes.ui.editor
 
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.NoteBody
-import com.example.notes.domain.model.NoteType
 import com.example.notes.domain.repository.NoteRepository
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
 
@@ -16,74 +15,55 @@ class NoteEditorViewModel(
     private val existingNote: Note? = null
 ) : ViewModel() {
 
-    private val noteId: UUID = existingNote?.id ?: UUID.randomUUID()
-    private val userId: UUID = existingNote?.userId ?: UUID.randomUUID()
+    private val noteId = existingNote?.id ?: UUID.randomUUID()
+    private val userId = existingNote?.userId ?: UUID.randomUUID()
 
     private val _title = MutableStateFlow(existingNote?.title ?: "")
     val title: StateFlow<String> = _title
 
-    private val _type = MutableStateFlow(existingNote?.type ?: NoteType.TEXT)
-    val type: StateFlow<NoteType> = _type
-
-    private val _body = MutableStateFlow<NoteBody>(
-        existingNote?.body ?: NoteBody.Text("")
+    private val _text = MutableStateFlow(
+        TextFieldValue(
+            (existingNote?.body as? NoteBody.Text)?.text.orEmpty()
+        )
     )
-    val body: StateFlow<NoteBody> = _body
+    val text: StateFlow<TextFieldValue> = _text
 
     init {
         autosave()
     }
 
-    // ---------- UI events ----------
-
-    fun onTitleChange(newTitle: String) {
-        _title.value = newTitle
+    fun onTitleChange(value: String) {
+        _title.value = value
     }
 
-    fun onTextChange(text: String) {
-        _type.value = NoteType.TEXT
-        _body.value = NoteBody.Text(text)
+    // 🔑 CHANGE: accept TextFieldValue
+    fun onTextChange(value: TextFieldValue) {
+        _text.value = value
     }
-
-    fun onBulletedListChange(items: List<String>) {
-        _type.value = NoteType.BULLETED_LIST
-        _body.value = NoteBody.BulletedList(items)
-    }
-
-    // ---------- Autosave ----------
 
     private fun autosave() {
-        combine(
-            title,
-            type,
-            body
-        ) { title, type, body ->
-            Triple(title, type, body)
-        }
-            .debounce(500) // ⏳ wait for user to pause typing
+        combine(title, text) { t, b -> t to b.text }
+            .debounce(400)
             .distinctUntilChanged()
-            .onEach {
-                saveInternal()
-            }
+            .onEach { saveInternal() }
             .launchIn(viewModelScope)
     }
 
     private suspend fun saveInternal() {
         val now = Instant.now()
 
-        val note = Note(
-            id = noteId,
-            userId = userId,
-            title = title.value.ifBlank { "Untitled" },
-            type = type.value,
-            body = body.value,
-            createdAt = existingNote?.createdAt ?: now,
-            createdBy = existingNote?.createdBy ?: userId,
-            updatedAt = now,
-            updatedBy = userId,
-            isPublic = false
+        repository.saveNote(
+            Note(
+                id = noteId,
+                userId = userId,
+                title = title.value.ifBlank { "Untitled" },
+                body = NoteBody.Text(text.value.text),
+                createdAt = existingNote?.createdAt ?: now,
+                createdBy = existingNote?.createdBy ?: userId,
+                updatedAt = now,
+                updatedBy = userId,
+                isPublic = false
+            )
         )
-
-        repository.saveNote(note)
     }
 }

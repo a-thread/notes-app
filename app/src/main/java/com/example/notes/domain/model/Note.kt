@@ -7,7 +7,6 @@ data class Note(
     val id: UUID,
     val userId: UUID,
     val title: String,
-    val type: NoteType,
     val body: NoteBody,
 
     val createdAt: Instant,

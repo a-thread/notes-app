@@ -16,7 +16,6 @@ fun NoteEntity.toDomain(): Note {
         id = UUID.fromString(id),
         userId = UUID.fromString(userId),
         title = title,
-        type = NoteType.valueOf(type),
         body = json.decodeFromString(NoteBody.serializer(), bodyJson),
 
         createdAt = Instant.ofEpochMilli(createdAt),
@@ -34,7 +33,6 @@ fun Note.toEntity(): NoteEntity {
         id = id.toString(),
         userId = userId.toString(),
         title = title,
-        type = type.name,
         bodyJson = json.encodeToString(NoteBody.serializer(), body),
 
         createdAt = createdAt.toEpochMilli(),

@@ -4,31 +4,45 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.NoteBody
-import com.example.notes.domain.model.NoteType
 import com.example.notes.domain.repository.NoteRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.UUID
 
+enum class NotesLayoutMode {
+    GRID,
+    LIST
+}
+
 class NotesListViewModel(
     private val repository: NoteRepository
 ) : ViewModel() {
 
-    val notes: StateFlow<List<Note>> =
-        repository.observeNotes()
+    val notes = repository.observeNotes()
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = emptyList()
             )
+
+    val layoutMode =
+        MutableStateFlow(NotesLayoutMode.GRID)
     private var recentlyDeletedNote: Note? = null
 
     init {
         insertTestNoteIfEmpty()
+    }
+
+    fun toggleLayout() {
+        layoutMode.value =
+            if (layoutMode.value == NotesLayoutMode.GRID)
+                NotesLayoutMode.LIST
+            else
+                NotesLayoutMode.GRID
     }
 
     private fun insertTestNoteIfEmpty() {
@@ -43,7 +57,6 @@ class NotesListViewModel(
                 id = UUID.randomUUID(),
                 userId = userId,
                 title = "Welcome to Notes 👋",
-                type = NoteType.TEXT,
                 body = NoteBody.Text(
                     text = "This is your first note.\n\nYou're ready to start building!"
                 ),

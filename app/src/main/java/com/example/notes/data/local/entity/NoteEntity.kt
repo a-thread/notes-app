@@ -10,7 +10,6 @@ data class NoteEntity(
 
     val userId: String,
     val title: String,
-    val type: String,
 
     // JSON stored as raw String
     val bodyJson: String,

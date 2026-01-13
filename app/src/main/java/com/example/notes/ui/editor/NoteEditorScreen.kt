@@ -1,16 +1,17 @@
 package com.example.notes.ui.editor
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.example.notes.domain.model.NoteBody
-import com.example.notes.domain.model.NoteType
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,17 +21,19 @@ fun NoteEditorScreen(
     modifier: Modifier = Modifier
 ) {
     val title by viewModel.title.collectAsState()
-    val body by viewModel.body.collectAsState()
-    val type by viewModel.type.collectAsState()
+    val text by viewModel.text.collectAsState()
 
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("Edit note") },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = onDone) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 }
             )
@@ -40,113 +43,150 @@ fun NoteEditorScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxSize()
         ) {
 
             // ---------- Title ----------
-            OutlinedTextField(
+            BasicTextField(
                 value = title,
                 onValueChange = viewModel::onTitleChange,
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                textStyle = TextStyle(
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                decorationBox = { inner ->
+                    if (title.isEmpty()) {
+                        Text(
+                            "Title",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    inner()
+                }
             )
 
             // ---------- Body ----------
-            when (type) {
-                NoteType.TEXT -> TextEditor(
-                    text = (body as NoteBody.Text).text,
-                    onTextChange = viewModel::onTextChange
-                )
-
-                NoteType.BULLETED_LIST -> BulletedListEditor(
-                    items = (body as NoteBody.BulletedList).items,
-                    onItemsChange = viewModel::onBulletedListChange
-                )
-            }
-
-            // ---------- Type switcher ----------
-            TypeSwitcher(
-                currentType = type,
-                onSwitchToText = {
-                    viewModel.onTextChange("")
-                },
-                onSwitchToList = {
-                    viewModel.onBulletedListChange(emptyList())
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun TextEditor(
-    text: String,
-    onTextChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = text,
-        onValueChange = onTextChange,
-        label = { Text("Note") },
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 200.dp),
-        maxLines = Int.MAX_VALUE
-    )
-}
-
-@Composable
-private fun BulletedListEditor(
-    items: List<String>,
-    onItemsChange: (List<String>) -> Unit
-) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        itemsIndexed(items) { index, item ->
-            OutlinedTextField(
-                value = item,
+            BasicTextField(
+                value = text,
                 onValueChange = { newValue ->
-                    val updated = items.toMutableList()
-                    updated[index] = newValue
-                    onItemsChange(updated)
+                    viewModel.onTextChange(
+                        handleListEditing(
+                            oldValue = text,
+                            newValue = newValue
+                        )
+                    )
                 },
-                label = { Text("Item ${index + 1}") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        item {
-            TextButton(
-                onClick = {
-                    onItemsChange(items + "")
+                textStyle = TextStyle(
+                    fontSize = 16.sp,
+                    lineHeight = 22.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                ),
+                modifier = Modifier.fillMaxSize(),
+                decorationBox = { inner ->
+                    if (text.text.isEmpty()) {
+                        Text(
+                            "Start typing…",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    inner()
                 }
-            ) {
-                Text("+ Add item")
-            }
+            )
         }
     }
 }
 
-@Composable
-private fun TypeSwitcher(
-    currentType: NoteType,
-    onSwitchToText: () -> Unit,
-    onSwitchToList: () -> Unit
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
-            selected = currentType == NoteType.TEXT,
-            onClick = onSwitchToText,
-            label = { Text("Text") }
-        )
+private fun handleListEditing(
+    oldValue: TextFieldValue,
+    newValue: TextFieldValue
+): TextFieldValue {
+    val oldText = oldValue.text
+    val newText = newValue.text
+    val newCursor = newValue.selection.start.coerceIn(0, newText.length)
 
-        FilterChip(
-            selected = currentType == NoteType.BULLETED_LIST,
-            onClick = onSwitchToList,
-            label = { Text("List") }
-        )
+    // ---------- ENTER (IME-safe): detect newline inserted right before cursor ----------
+    val insertedNewline =
+        newText.length > oldText.length &&
+                newCursor > 0 &&
+                newText.getOrNull(newCursor - 1) == '\n'
+
+    if (insertedNewline) {
+        val prevLineStart = newText.lastIndexOf('\n', (newCursor - 2).coerceAtLeast(0))
+            .let { if (it == -1) 0 else it + 1 }
+
+        val prevLineEnd = (newCursor - 1).coerceAtLeast(prevLineStart)
+        val prevLine = newText.substring(prevLineStart, prevLineEnd)
+
+        // If previous line is exactly "- ", user wants to exit list
+        if (prevLine == "- ") return newValue
+
+        // If previous line starts with "- ", continue list
+        if (prevLine.startsWith("- ")) {
+            val updatedText = buildString {
+                append(newText.substring(0, newCursor))
+                append("- ")
+                append(newText.substring(newCursor))
+            }
+            val updatedCursor = (newCursor + 2).coerceIn(0, updatedText.length)
+
+            return TextFieldValue(
+                text = updatedText,
+                selection = TextRange(updatedCursor)
+            )
+        }
+
+        return newValue
     }
+
+    // ---------- BACKSPACE (IME-safe): detect deletion ----------
+    val didDelete = newText.length < oldText.length
+    if (didDelete) {
+        // Determine current line start in the *new* text
+        val lineStart = newText.lastIndexOf('\n', (newCursor - 1).coerceAtLeast(0))
+            .let { if (it == -1) 0 else it + 1 }
+
+        // Text from start of line to cursor
+        val beforeCursorOnLine = newText.substring(lineStart, newCursor)
+
+        // We only care when user is basically deleting the bullet prefix.
+        // Typical sequence:
+        // old: "- " (cursor after space)
+        // backspace -> new: "-" (cursor after '-')
+        // backspace -> new: "" (cursor at line start)
+        if (beforeCursorOnLine == "-" || beforeCursorOnLine.isEmpty()) {
+            // Look at what the old line prefix was (safe)
+            val oldCursor = oldValue.selection.start.coerceIn(0, oldText.length)
+            val oldLineStart = oldText.lastIndexOf('\n', (oldCursor - 1).coerceAtLeast(0))
+                .let { if (it == -1) 0 else it + 1 }
+
+            val oldPrefixEnd = (oldLineStart + 2).coerceAtMost(oldText.length)
+            val oldPrefix = if (oldPrefixEnd >= oldLineStart) oldText.substring(oldLineStart, oldPrefixEnd) else ""
+
+            // If the old line started with "- ", collapse the bullet entirely
+            if (oldPrefix == "- ") {
+                var updated = newText
+
+                // Remove '-' if present at line start
+                if (lineStart < updated.length && updated[lineStart] == '-') {
+                    updated = updated.removeRange(lineStart, lineStart + 1)
+                }
+                // Remove following space if present
+                if (lineStart < updated.length && updated[lineStart] == ' ') {
+                    updated = updated.removeRange(lineStart, lineStart + 1)
+                }
+
+                val updatedCursor = lineStart.coerceIn(0, updated.length)
+                return TextFieldValue(
+                    text = updated,
+                    selection = TextRange(updatedCursor)
+                )
+            }
+        }
+    }
+
+    return newValue
 }

@@ -13,7 +13,9 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "notes.db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     fun provideNoteRepository(context: Context): NoteRepository {
