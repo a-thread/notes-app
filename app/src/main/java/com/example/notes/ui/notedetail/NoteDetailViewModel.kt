@@ -25,8 +25,6 @@ class NoteDetailViewModel(
     private val originalTitle = existingNote?.title ?: ""
     private var originalText = (existingNote?.body as? NoteBody.Text)?.text ?: ""
     private val _editSession = MutableStateFlow(0)
-    val editSession: StateFlow<Int> = _editSession
-
 
     private val _mode = MutableStateFlow(
         if (existingNote == null) EditorMode.Edit else EditorMode.ReadOnly
