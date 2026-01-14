@@ -1,13 +1,15 @@
 package com.example.notes
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.repository.NoteRepository
-import com.example.notes.ui.editor.NoteEditorScreen
-import com.example.notes.ui.editor.NoteEditorViewModel
+import com.example.notes.ui.notedetail.NoteDetailScreen
+import com.example.notes.ui.notedetail.NoteDetailViewModel
 import com.example.notes.ui.noteslist.NotesListScreen
 import com.example.notes.ui.noteslist.NotesListViewModel
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Composable
 fun NotesApp(
     isEditing: Boolean,
@@ -19,12 +21,12 @@ fun NotesApp(
     repository: NoteRepository
 ) {
     if (isEditing) {
-        val editorViewModel = NoteEditorViewModel(
+        val editorViewModel = NoteDetailViewModel(
             repository = repository,
             existingNote = editingNote
         )
 
-        NoteEditorScreen(
+        NoteDetailScreen(
             viewModel = editorViewModel,
             onDone = onCloseEditor
         )

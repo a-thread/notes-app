@@ -22,8 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.NoteBody
-import com.example.notes.ui.util.extractListItems
-import com.example.notes.ui.util.isListLike
+import com.example.notes.ui.noteslist.composables.NoteListPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -69,9 +68,9 @@ fun NotesListScreen(
         }
     ) { padding ->
 
-        // Snackbar logic
+        // Snackbar undo logic
         LaunchedEffect(recentlyDeletedNote) {
-            val note = recentlyDeletedNote ?: return@LaunchedEffect
+            if (recentlyDeletedNote != null)  return@LaunchedEffect
 
             val job = launch {
                 val result = snackbarHostState.showSnackbar(
@@ -97,26 +96,30 @@ fun NotesListScreen(
         if (notes.isEmpty()) {
             EmptyState(Modifier.padding(padding))
         } else {
-            if (layoutMode == NotesLayoutMode.GRID) {
-                NotesGrid(
-                    notes = notes,
-                    onEditNote = onEditNote,
-                    onDeleteNote = {
-                        viewModel.deleteNote(it)
-                        recentlyDeletedNote = it
-                    },
-                    modifier = Modifier.padding(padding)
-                )
-            } else {
-                NotesList(
-                    notes = notes,
-                    onEditNote = onEditNote,
-                    onDeleteNote = {
-                        viewModel.deleteNote(it)
-                        recentlyDeletedNote = it
-                    },
-                    modifier = Modifier.padding(padding)
-                )
+            when (layoutMode) {
+                NotesLayoutMode.GRID -> {
+                    NotesGrid(
+                        notes = notes,
+                        onEditNote = onEditNote,
+                        onDeleteNote = {
+                            viewModel.deleteNote(it)
+                            recentlyDeletedNote = it
+                        },
+                        modifier = Modifier.padding(padding)
+                    )
+                }
+
+                NotesLayoutMode.LIST -> {
+                    NotesList(
+                        notes = notes,
+                        onEditNote = onEditNote,
+                        onDeleteNote = {
+                            viewModel.deleteNote(it)
+                            recentlyDeletedNote = it
+                        },
+                        modifier = Modifier.padding(padding)
+                    )
+                }
             }
         }
     }
@@ -250,7 +253,7 @@ private fun NoteItem(
     note: Note,
     onClick: (Note) -> Unit
 ) {
-    val text = (note.body as? NoteBody.Text)?.text.orEmpty()
+    val bodyText = (note.body as? NoteBody.Text)?.text.orEmpty()
 
     Card(
         modifier = Modifier
@@ -267,35 +270,10 @@ private fun NoteItem(
 
             Spacer(Modifier.height(8.dp))
 
-            if (text.isListLike()) {
-                ListPreview(text)
-            } else {
-                TextPreview(text)
-            }
-        }
-    }
-}
-
-@Composable
-private fun TextPreview(text: String) {
-    Text(
-        text = text.lines().firstOrNull().orEmpty(),
-        style = MaterialTheme.typography.bodyMedium,
-        maxLines = 2
-    )
-}
-
-@Composable
-private fun ListPreview(text: String) {
-    val items = text.extractListItems().take(3)
-
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        items.forEach { item ->
-            Text(
-                text = "• $item",
-                style = MaterialTheme.typography.bodyMedium
+            // ✅ Rich semantic preview (checkboxes, strikethrough, etc.)
+            NoteListPreview(
+                body = bodyText
             )
         }
     }
 }
-
