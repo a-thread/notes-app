@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,6 +35,7 @@ fun NotesListScreen(
     viewModel: NotesListViewModel,
     onCreateNote: () -> Unit,
     onEditNote: (Note) -> Unit,
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val notes by viewModel.notes.collectAsState()
@@ -41,6 +43,7 @@ fun NotesListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var recentlyDeletedNote by remember { mutableStateOf<Note?>(null) }
+    var menuExpanded by remember { mutableStateOf(false) }
 
     val toggleIcon =
         if (layoutMode == NotesLayoutMode.GRID)
@@ -57,6 +60,23 @@ fun NotesListScreen(
                     IconButton(onClick = viewModel::toggleLayout) {
                         Icon(toggleIcon, contentDescription = "Toggle layout")
                     }
+
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Logout") },
+                            onClick = {
+                                menuExpanded = false
+                                onLogout()
+                            }
+                        )
+                    }
                 }
             )
         },
@@ -68,9 +88,10 @@ fun NotesListScreen(
         }
     ) { padding ->
 
-        // Snackbar undo logic
+        /* ───────────── Snackbar undo logic ───────────── */
+
         LaunchedEffect(recentlyDeletedNote) {
-            if (recentlyDeletedNote == null)  return@LaunchedEffect
+            val note = recentlyDeletedNote ?: return@LaunchedEffect
 
             val job = launch {
                 val result = snackbarHostState.showSnackbar(
@@ -93,37 +114,41 @@ fun NotesListScreen(
             recentlyDeletedNote = null
         }
 
-        if (notes.isEmpty()) {
-            EmptyState(Modifier.padding(padding))
-        } else {
-            when (layoutMode) {
-                NotesLayoutMode.GRID -> {
-                    NotesGrid(
-                        notes = notes,
-                        onEditNote = onEditNote,
-                        onDeleteNote = {
-                            viewModel.deleteNote(it)
-                            recentlyDeletedNote = it
-                        },
-                        modifier = Modifier.padding(padding)
-                    )
-                }
+        /* ───────────── Content ───────────── */
 
-                NotesLayoutMode.LIST -> {
-                    NotesList(
-                        notes = notes,
-                        onEditNote = onEditNote,
-                        onDeleteNote = {
-                            viewModel.deleteNote(it)
-                            recentlyDeletedNote = it
-                        },
-                        modifier = Modifier.padding(padding)
-                    )
-                }
+        when {
+            notes.isEmpty() -> {
+                EmptyState(Modifier.padding(padding))
+            }
+
+            layoutMode == NotesLayoutMode.GRID -> {
+                NotesGrid(
+                    notes = notes,
+                    onEditNote = onEditNote,
+                    onDeleteNote = {
+                        viewModel.deleteNote(it)
+                        recentlyDeletedNote = it
+                    },
+                    modifier = Modifier.padding(padding)
+                )
+            }
+
+            else -> {
+                NotesList(
+                    notes = notes,
+                    onEditNote = onEditNote,
+                    onDeleteNote = {
+                        viewModel.deleteNote(it)
+                        recentlyDeletedNote = it
+                    },
+                    modifier = Modifier.padding(padding)
+                )
             }
         }
     }
 }
+
+/* ───────────────────────── Empty ───────────────────────── */
 
 @Composable
 private fun EmptyState(modifier: Modifier = Modifier) {
@@ -139,6 +164,8 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         )
     }
 }
+
+/* ───────────────────────── Grid ───────────────────────── */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,23 +183,65 @@ private fun NotesGrid(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(notes, key = { it.id }) { note ->
-            SwipeToDismissBox(
-                state = rememberSwipeToDismissBoxState(
-                    confirmValueChange = {
-                        if (it == SwipeToDismissBoxValue.EndToStart) {
-                            onDeleteNote(note)
-                            true
-                        } else false
-                    }
-                ),
-                backgroundContent = { DeleteSwipeBackground() },
-                content = {
-                    GridNoteCard(note, onEditNote)
-                }
-            )
+            SwipeToDelete(
+                onDelete = { onDeleteNote(note) }
+            ) {
+                GridNoteCard(note, onEditNote)
+            }
         }
     }
 }
+
+/* ───────────────────────── List ───────────────────────── */
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotesList(
+    notes: List<Note>,
+    onEditNote: (Note) -> Unit,
+    onDeleteNote: (Note) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(notes, key = { it.id }) { note ->
+            SwipeToDelete(
+                onDelete = { onDeleteNote(note) }
+            ) {
+                NoteItem(note, onEditNote)
+            }
+        }
+    }
+}
+
+/* ───────────────────────── Swipe Wrapper ───────────────────────── */
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeToDelete(
+    onDelete: () -> Unit,
+    content: @Composable RowScope.() -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState()
+
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            onDelete()
+        }
+    }
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = { DeleteSwipeBackground() },
+    ) {
+        content()
+    }
+}
+
+/* ───────────────────────── Cards ───────────────────────── */
 
 @Composable
 private fun GridNoteCard(
@@ -198,56 +267,6 @@ private fun GridNoteCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NotesList(
-    notes: List<Note>,
-    onEditNote: (Note) -> Unit,
-    onDeleteNote: (Note) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(notes, key = { it.id }) { note ->
-            SwipeToDismissBox(
-                state = rememberSwipeToDismissBoxState(
-                    confirmValueChange = {
-                        if (it == SwipeToDismissBoxValue.EndToStart) {
-                            onDeleteNote(note)
-                            true
-                        } else false
-                    }
-                ),
-                backgroundContent = { DeleteSwipeBackground() },
-                content = {
-                    NoteItem(note, onEditNote)
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun DeleteSwipeBackground() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clip(NoteShape)
-            .background(MaterialTheme.colorScheme.error)
-            .padding(end = 24.dp),
-        contentAlignment = Alignment.CenterEnd
-    ) {
-        Icon(
-            Icons.Default.Delete,
-            contentDescription = "Delete",
-            tint = MaterialTheme.colorScheme.onError
-        )
-    }
-}
-
 @Composable
 private fun NoteItem(
     note: Note,
@@ -270,10 +289,29 @@ private fun NoteItem(
 
             Spacer(Modifier.height(8.dp))
 
-            // ✅ Rich semantic preview (checkboxes, strikethrough, etc.)
             NoteListPreview(
                 body = bodyText
             )
         }
+    }
+}
+
+/* ───────────────────────── Swipe Background ───────────────────────── */
+
+@Composable
+private fun DeleteSwipeBackground() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(NoteShape)
+            .background(MaterialTheme.colorScheme.error)
+            .padding(end = 24.dp),
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        Icon(
+            Icons.Default.Delete,
+            contentDescription = "Delete",
+            tint = MaterialTheme.colorScheme.onError
+        )
     }
 }

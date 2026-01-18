@@ -19,6 +19,7 @@ fun NotesApp(
     onCreateNote: () -> Unit,
     onEditNote: (Note) -> Unit,
     onCloseEditor: () -> Unit,
+    onLogout: () -> Unit,
     repository: NoteRepository
 ) {
     if (isEditing) {
@@ -38,7 +39,8 @@ fun NotesApp(
         NotesListScreen(
             viewModel = listViewModel,
             onCreateNote = onCreateNote,
-            onEditNote = onEditNote
+            onEditNote = onEditNote,
+            onLogout = onLogout
         )
     }
 }

@@ -103,6 +103,12 @@ class AuthViewModel(
         )
     }
 
+    fun signOut() {
+        viewModelScope.launch {
+            authRepository.signOut()
+        }
+    }
+
     /* ─────────────────────────────────────────────
      * Deep link handling (Supabase)
      * ───────────────────────────────────────────── */
