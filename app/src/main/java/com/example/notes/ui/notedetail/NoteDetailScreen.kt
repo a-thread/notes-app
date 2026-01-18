@@ -26,6 +26,8 @@ fun NoteDetailScreen(
 
     var showDiscardDialog by remember { mutableStateOf(false) }
 
+    /* ───────────── Discard dialog ───────────── */
+
     if (showDiscardDialog) {
         AlertDialog(
             onDismissRequest = { showDiscardDialog = false },
@@ -48,6 +50,8 @@ fun NoteDetailScreen(
             }
         )
     }
+
+    /* ───────────── Scaffold ───────────── */
 
     Scaffold(
         modifier = modifier,
@@ -77,7 +81,10 @@ fun NoteDetailScreen(
                     when (mode) {
                         EditorMode.ReadOnly -> {
                             IconButton(onClick = viewModel::enterEditMode) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit")
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit"
+                                )
                             }
                         }
 
@@ -85,7 +92,10 @@ fun NoteDetailScreen(
                             IconButton(
                                 onClick = { viewModel.saveAndExit(onDone) }
                             ) {
-                                Icon(Icons.Default.Check, contentDescription = "Save")
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Save"
+                                )
                             }
                         }
                     }
@@ -117,7 +127,7 @@ fun NoteDetailScreen(
                         onTitleChange = viewModel::onTitleChange,
                         onBodyChange = viewModel::onTextChange,
                         onSave = { viewModel.saveAndExit(onDone) },
-                        isNewNote = viewModel.isNewNote,
+                        isNewNote = viewModel.isNewNote
                     )
                 }
             }

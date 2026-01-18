@@ -1,46 +1,59 @@
 package com.example.notes.data.mapper
 
 import com.example.notes.data.local.entity.NoteEntity
-import com.example.notes.domain.model.*
-import kotlinx.serialization.json.Json
+import com.example.notes.data.remote.supabase.SupabaseNoteDto
+import com.example.notes.domain.model.Note
+import com.example.notes.domain.model.NoteBody
 import java.time.Instant
 import java.util.UUID
 
-private val json = Json {
-    ignoreUnknownKeys = true
-    classDiscriminator = "type"
-}
+/* ───────────────────────────────
+ * Room → Domain
+ * ─────────────────────────────── */
 
-fun NoteEntity.toDomain(): Note {
-    return Note(
+fun NoteEntity.toDomain(): Note =
+    Note(
         id = UUID.fromString(id),
         userId = UUID.fromString(userId),
         title = title,
-        body = json.decodeFromString(NoteBody.serializer(), bodyJson),
-
+        body = NoteBody.Text(body),
         createdAt = Instant.ofEpochMilli(createdAt),
         createdBy = UUID.fromString(createdBy),
-
         updatedAt = Instant.ofEpochMilli(updatedAt),
         updatedBy = UUID.fromString(updatedBy),
-
         isPublic = isPublic
     )
-}
 
-fun Note.toEntity(): NoteEntity {
-    return NoteEntity(
+/* ───────────────────────────────
+ * Domain → Room
+ * ─────────────────────────────── */
+
+fun Note.toEntity(): NoteEntity =
+    NoteEntity(
         id = id.toString(),
         userId = userId.toString(),
         title = title,
-        bodyJson = json.encodeToString(NoteBody.serializer(), body),
-
+        body = (body as NoteBody.Text).text,
         createdAt = createdAt.toEpochMilli(),
         createdBy = createdBy.toString(),
-
         updatedAt = updatedAt.toEpochMilli(),
         updatedBy = updatedBy.toString(),
-
         isPublic = isPublic
     )
-}
+
+/* ───────────────────────────────
+ * Supabase DTO → Room
+ * ─────────────────────────────── */
+
+fun SupabaseNoteDto.toEntity(): NoteEntity =
+    NoteEntity(
+        id = id,
+        userId = user_id,
+        title = title,
+        body = body,
+        createdAt = Instant.parse(created_at).toEpochMilli(),
+        createdBy = created_by,
+        updatedAt = Instant.parse(updated_at).toEpochMilli(),
+        updatedBy = updated_by,
+        isPublic = is_public
+    )

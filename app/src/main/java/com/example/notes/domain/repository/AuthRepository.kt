@@ -1,0 +1,19 @@
+package com.example.notes.domain.repository
+
+import kotlinx.coroutines.flow.Flow
+import java.util.UUID
+
+interface AuthRepository {
+
+    // Auth actions
+    suspend fun signIn(email: String, password: String)
+    suspend fun signUp(email: String, password: String)
+    suspend fun resetPassword(email: String)
+    suspend fun signOut()
+
+    // Auth state
+    val userId: Flow<UUID?>
+    fun currentSessionOrNull(): Any?
+}
+
+

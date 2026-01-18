@@ -70,7 +70,7 @@ fun NotesListScreen(
 
         // Snackbar undo logic
         LaunchedEffect(recentlyDeletedNote) {
-            if (recentlyDeletedNote != null)  return@LaunchedEffect
+            if (recentlyDeletedNote == null)  return@LaunchedEffect
 
             val job = launch {
                 val result = snackbarHostState.showSnackbar(
