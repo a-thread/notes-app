@@ -4,6 +4,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes.domain.repository.AuthRepository
+import com.example.notes.ui.auth.model.AuthDeepLinkResult
+import io.github.jan.supabase.auth.exception.AuthErrorCode
+import io.github.jan.supabase.auth.exception.AuthRestException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,6 +69,36 @@ class AuthViewModel(
         }
     }
 
+    fun showForgotPassword() {
+        _uiState.update {
+            it.copy(
+                screen = AuthScreen.ForgotPassword,
+                errorMessage = null,
+                infoMessage = null
+            )
+        }
+    }
+
+    fun showCreateAccount() {
+        _uiState.update {
+            it.copy(
+                screen = AuthScreen.CreateAccount,
+                errorMessage = null,
+                infoMessage = null
+            )
+        }
+    }
+
+    fun showLogin() {
+        _uiState.update {
+            it.copy(
+                screen = AuthScreen.Login,
+                errorMessage = null,
+                infoMessage = null
+            )
+        }
+    }
+
     /* ─────────────────────────────────────────────
      * Auth actions
      * ───────────────────────────────────────────── */
@@ -83,24 +116,135 @@ class AuthViewModel(
     }
 
     fun signUp() {
-        submit(
-            block = {
-                authRepository.signUp(
-                    email = uiState.value.email,
-                    password = uiState.value.password
+        val state = uiState.value
+        if (!state.isEmailValid || !state.isPasswordValid || !state.passwordsMatch) return
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    infoMessage = null
                 )
-            },
-            successMessage = "Registration successful! Check your email to confirm."
-        )
+            }
+
+            try {
+                authRepository.signUp(state.email, state.password)
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        screen = AuthScreen.Login, // ✅ return to login
+                        password = "",
+                        confirmPassword = "",
+                        infoMessage =
+                            "A confirmation email has been sent to you! " +
+                                    "Please confirm your email to get access to your account."
+                    )
+                }
+
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Unable to create account. Please try again."
+                    )
+                }
+            }
+        }
     }
 
     fun resetPassword() {
-        submit(
-            block = {
-                authRepository.resetPassword(uiState.value.email)
-            },
-            successMessage = "Password reset link sent to your email."
-        )
+        val email = uiState.value.email
+        if (email.isBlank() || !uiState.value.isEmailValid) return
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+            }
+
+            try {
+                authRepository.resetPassword(email)
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        screen = AuthScreen.Login, // ✅ go back
+                        infoMessage = "Check your email for a password reset link"
+                    )
+                }
+
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Unable to send reset email. Please try again."
+                    )
+                }
+            }
+        }
+    }
+
+    fun onConfirmPasswordChange(value: String) {
+        _uiState.update { it.copy(confirmPassword = value) }
+    }
+
+    fun updatePassword(onSuccess: () -> Unit) {
+        val state = uiState.value
+
+        if (!state.isPasswordValid || !state.passwordsMatch) return
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(isLoading = true, errorMessage = null)
+            }
+
+            try {
+                authRepository.updatePassword(state.password)
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        password = "",
+                        confirmPassword = "",
+                        screen = AuthScreen.Login,
+                        infoMessage = "Password updated successfully"
+                    )
+                }
+
+                onSuccess()
+
+            } catch (e:AuthRestException) {
+                // Supabase-specific errors
+                val message = when (e.errorCode) {
+                    AuthErrorCode.SamePassword ->
+                        "New password must be different from your old password"
+                    AuthErrorCode.WeakPassword ->
+                        "Password is too weak"
+                    else ->
+                        e.message ?: "Unable to update password"
+                }
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = message
+                    )
+                }
+
+            } catch (e: Exception) {
+                // Safety net
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Something went wrong. Please try again."
+                    )
+                }
+            }
+        }
     }
 
     fun signOut() {
@@ -112,19 +256,45 @@ class AuthViewModel(
     /* ─────────────────────────────────────────────
      * Deep link handling (Supabase)
      * ───────────────────────────────────────────── */
-
-    /**
-     * Supabase automatically processes the auth link internally.
-     * This function ONLY updates UI messaging.
-     */
     fun handleAuthDeepLink(uri: Uri) {
-        _uiState.update {
-            it.copy(
-                infoMessage = "Authentication successful. You may continue.",
-                errorMessage = null
-            )
+        viewModelScope.launch {
+            when (authRepository.handleDeepLink(uri)) {
+
+                AuthDeepLinkResult.ResetPassword -> {
+                    _uiState.update {
+                        it.copy(
+                            screen = AuthScreen.ResetPassword,
+                            password = "",
+                            confirmPassword = "",
+                            errorMessage = null,
+                            infoMessage = null
+                        )
+                    }
+                }
+
+                AuthDeepLinkResult.SignupConfirmed -> {
+                    _uiState.update {
+                        it.copy(
+                            isAuthenticated = true, // ✅ auto sign-in
+                            screen = AuthScreen.Login, // router will move past this
+                            infoMessage =
+                                "Welcome! Your email has been confirmed and you're now signed in.",
+                            errorMessage = null
+                        )
+                    }
+                }
+
+                null -> {
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = "Invalid or expired link"
+                        )
+                    }
+                }
+            }
         }
     }
+
 
     /* ─────────────────────────────────────────────
      * Shared submit logic

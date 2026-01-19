@@ -37,7 +37,9 @@ fun NoteDetailScreen(
                 TextButton(
                     onClick = {
                         showDiscardDialog = false
-                        viewModel.discardChanges()
+                        if (viewModel.discardChanges()) {
+                            onDone() // navigate back to list
+                        }
                     }
                 ) {
                     Text("Discard")

@@ -1,10 +1,13 @@
 package com.example.notes.data.repository
 
+import android.net.Uri
 import com.example.notes.domain.repository.AuthRepository
+import com.example.notes.ui.auth.model.AuthDeepLinkResult
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.auth.user.UserSession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
@@ -21,8 +24,7 @@ class AuthRepositoryImpl(
         client.auth.sessionStatus.map { status ->
             when (status) {
                 is SessionStatus.Authenticated ->
-                    status.session.user?.id.let(UUID::fromString)
-
+                    status.session.user?.id?.let(UUID::fromString)
                 else -> null
             }
         }
@@ -33,6 +35,7 @@ class AuthRepositoryImpl(
     /* ─────────────────────────────────────────────
      * Actions
      * ───────────────────────────────────────────── */
+
     override suspend fun signIn(email: String, password: String) {
         client.auth.signInWith(Email) {
             this.email = email
@@ -43,7 +46,7 @@ class AuthRepositoryImpl(
     override suspend fun signUp(email: String, password: String) {
         client.auth.signUpWith(
             Email,
-            "notesapp://auth/confirm"
+            redirectUrl = "notesapp://auth/confirm"
         ) {
             this.email = email
             this.password = password
@@ -51,11 +54,75 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun resetPassword(email: String) {
-        client.auth.resetPasswordForEmail(email, "notesapp://auth/reset")
+        client.auth.resetPasswordForEmail(
+            email,
+            redirectUrl = "notesapp://auth/reset"
+        )
+    }
+
+    override suspend fun updatePassword(password: String) {
+        client.auth.updateUser {
+            this.password = password
+        }
+    }
+
+    override suspend fun handleDeepLink(uri: Uri): AuthDeepLinkResult? {
+        val params = uri.getAllParameters()
+
+        val accessToken = params["access_token"]
+        val refreshToken = params["refresh_token"]
+        val type = params["type"]
+        val expiresIn = params["expires_in"]?.toLongOrNull() ?: 3600L
+
+        if (accessToken.isNullOrBlank() || refreshToken.isNullOrBlank()) {
+            return null
+        }
+
+        return try {
+            client.auth.importSession(
+                UserSession(
+                    accessToken = accessToken,
+                    refreshToken = refreshToken,
+                    user = null,
+                    tokenType = "bearer",
+                    expiresIn = expiresIn
+                )
+            )
+
+            when (type) {
+                "recovery" -> AuthDeepLinkResult.ResetPassword
+                "signup" -> AuthDeepLinkResult.SignupConfirmed
+                "confirm" -> AuthDeepLinkResult.SignupConfirmed
+                else -> null
+            }
+
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override suspend fun signOut() {
         client.auth.signOut()
+    }
+
+    private fun Uri.getAllParameters(): Map<String, String> {
+        val params = mutableMapOf<String, String>()
+
+        // Query params (?a=1)
+        queryParameterNames.forEach { key ->
+            getQueryParameter(key)?.let { params[key] = it }
+        }
+
+        // Fragment params (#a=1)
+        fragment
+            ?.split("&")
+            ?.mapNotNull {
+                val parts = it.split("=", limit = 2)
+                if (parts.size == 2) parts[0] to parts[1] else null
+            }
+            ?.forEach { (k, v) -> params[k] = v }
+
+        return params
     }
 
 }

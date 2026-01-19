@@ -3,9 +3,18 @@ package com.example.notes.ui.auth
 import android.util.Patterns
 import java.util.UUID
 
+enum class AuthScreen {
+    Login,
+    ForgotPassword,
+    ResetPassword,
+    CreateAccount
+}
+
 data class AuthUiState(
+    val screen: AuthScreen = AuthScreen.Login,
     val email: String = "",
     val password: String = "",
+    val confirmPassword: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val infoMessage: String? = null,
@@ -20,4 +29,16 @@ data class AuthUiState(
 
     val canSubmit: Boolean
         get() = isEmailValid && isPasswordValid && !isLoading
+
+    val canSubmitReset: Boolean
+        get() = email.isNotBlank() && isEmailValid && !isLoading
+
+    val passwordsMatch: Boolean
+        get() = password == confirmPassword
+
+    val canSubmitNewPassword: Boolean
+        get() = isPasswordValid && passwordsMatch && !isLoading
+
+    val canSubmitCreateAccount: Boolean
+        get() = isEmailValid && isPasswordValid && passwordsMatch && !isLoading
 }

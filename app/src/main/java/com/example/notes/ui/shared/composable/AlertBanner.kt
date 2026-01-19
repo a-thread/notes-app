@@ -51,7 +51,6 @@ fun AlertBanner(
                     color = contentColor,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),
-                    maxLines = 2
                 )
             }
 

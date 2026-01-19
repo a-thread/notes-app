@@ -2,12 +2,14 @@ package com.example.notes.ui.noteslist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
@@ -20,7 +22,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.model.NoteBody
 import com.example.notes.ui.noteslist.composables.NoteListPreview
@@ -55,7 +59,16 @@ fun NotesListScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("BlackNote") },
+                title = {
+                    Text(
+                        text = "lichen",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.4.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
                 actions = {
                     IconButton(onClick = viewModel::toggleLayout) {
                         Icon(toggleIcon, contentDescription = "Toggle layout")
@@ -82,10 +95,20 @@ fun NotesListScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreateNote) {
-                Icon(Icons.Default.Add, contentDescription = "Add note")
+            FloatingActionButton(
+                onClick = onCreateNote,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                shape = CircleShape
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "New note"
+                )
             }
         }
+
     ) { padding ->
 
         /* ───────────── Snackbar undo logic ───────────── */
@@ -160,7 +183,8 @@ private fun EmptyState(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = "No notes yet",
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -253,7 +277,10 @@ private fun GridNoteCard(
             .fillMaxWidth()
             .clickable { onClick(note) },
         shape = NoteShape,
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Box(
             modifier = Modifier.padding(16.dp),
@@ -261,7 +288,10 @@ private fun GridNoteCard(
         ) {
             Text(
                 text = note.title,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -277,14 +307,22 @@ private fun NoteItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(note) },
-        elevation = CardDefaults.cardElevation(2.dp)
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onClick(note) },
+        shape = NoteShape,
+        elevation = CardDefaults.cardElevation(0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
             Text(
                 text = note.title,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(Modifier.height(8.dp))
@@ -304,7 +342,9 @@ private fun DeleteSwipeBackground() {
         modifier = Modifier
             .fillMaxSize()
             .clip(NoteShape)
-            .background(MaterialTheme.colorScheme.error)
+            .background(
+                MaterialTheme.colorScheme.errorContainer
+            )
             .padding(end = 24.dp),
         contentAlignment = Alignment.CenterEnd
     ) {

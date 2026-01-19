@@ -54,10 +54,17 @@ class NoteDetailViewModel(
         _text.value = value
     }
 
-    fun discardChanges() {
+    fun discardChanges(): Boolean {
+        if (isNewNote) {
+            // New note → discard means leave entirely
+            return true
+        }
+
+        // Existing note → revert changes and stay
         _title.value = originalTitle
         _text.value = TextFieldValue(originalText)
-        _mode.value = if (isNewNote) EditorMode.Edit else EditorMode.ReadOnly
+        _mode.value = EditorMode.ReadOnly
+        return false
     }
 
     fun toggleChecklistItem(lineIndex: Int) {
