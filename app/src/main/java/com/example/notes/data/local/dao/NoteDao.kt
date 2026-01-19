@@ -25,4 +25,14 @@ interface NoteDao {
 
     @Query("DELETE FROM note WHERE userId = :userId")
     suspend fun deleteAllForUser(userId: String)
+
+    @Query("""
+        DELETE FROM note
+        WHERE userId = :userId
+        AND id NOT IN (:ids)
+    """)
+    suspend fun deleteNotInIds(
+        userId: String,
+        ids: Set<String>
+    )
 }

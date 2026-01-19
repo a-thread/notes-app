@@ -9,6 +9,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.notes.ui.auth.composables.*
 import com.example.notes.ui.shared.composable.AppButton
+import com.example.notes.ui.shared.composable.DetailScaffold
 
 @Composable
 fun ForgotPasswordScreen(
@@ -17,7 +18,7 @@ fun ForgotPasswordScreen(
     onSendReset: () -> Unit,
     onBack: () -> Unit
 ) {
-    AuthScaffold(
+    DetailScaffold(
         title = "Forgot your password?",
         subtitle = "Please enter the email address associated with your account and we’ll send you instructions for resetting your password.",
         onBack = onBack

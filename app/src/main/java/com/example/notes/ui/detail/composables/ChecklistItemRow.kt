@@ -1,4 +1,4 @@
-package com.example.notes.ui.notedetail.composables
+package com.example.notes.ui.detail.composables
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.example.notes.ui.notedetail.model.ChecklistItem
+import com.example.notes.ui.detail.model.ChecklistItem
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

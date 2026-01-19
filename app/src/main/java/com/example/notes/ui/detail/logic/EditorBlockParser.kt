@@ -1,8 +1,8 @@
-package com.example.notes.ui.notedetail.logic
+package com.example.notes.ui.detail.logic
 
 import androidx.compose.ui.text.input.TextFieldValue
 import com.example.notes.ui.shared.model.EditorBlock
-import com.example.notes.ui.notedetail.model.ChecklistItem
+import com.example.notes.ui.detail.model.ChecklistItem
 import kotlin.collections.plusAssign
 
 fun TextFieldValue.parseEditorBlocks(): List<EditorBlock> {

@@ -1,5 +1,6 @@
 package com.example.notes.ui.auth.composables
 
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,6 +16,7 @@ fun PasswordField(
     isError: Boolean,
     errorText: String,
     imeAction: ImeAction,
+    onDone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     AuthTextField(
@@ -28,6 +30,9 @@ fun PasswordField(
         KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = imeAction
-        )
+        ),
+        KeyboardActions(
+            onDone = { onDone() }
+        ),
     )
 }

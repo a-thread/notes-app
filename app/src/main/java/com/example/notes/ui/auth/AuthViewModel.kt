@@ -1,6 +1,7 @@
 package com.example.notes.ui.auth
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes.domain.repository.AuthRepository
@@ -99,6 +100,16 @@ class AuthViewModel(
         }
     }
 
+    fun showAbout() {
+        _uiState.update {
+            it.copy(
+                screen = AuthScreen.About,
+                errorMessage = null,
+                infoMessage = null
+            )
+        }
+    }
+
     /* ─────────────────────────────────────────────
      * Auth actions
      * ───────────────────────────────────────────── */
@@ -144,6 +155,7 @@ class AuthViewModel(
                 }
 
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Sign Up failed", e)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -178,6 +190,8 @@ class AuthViewModel(
                 }
 
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Reset Password failed", e)
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -236,6 +250,8 @@ class AuthViewModel(
                 }
 
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Update Password failed", e)
+
                 // Safety net
                 _uiState.update {
                     it.copy(

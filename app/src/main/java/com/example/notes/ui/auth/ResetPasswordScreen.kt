@@ -8,6 +8,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.example.notes.ui.auth.composables.*
 import com.example.notes.ui.shared.composable.AppButton
+import com.example.notes.ui.shared.composable.DetailScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,7 +19,7 @@ fun ResetPasswordScreen(
     onSubmit: () -> Unit,
     onCancel: () -> Unit
 ) {
-    AuthScaffold(
+    DetailScaffold(
         title = "Set new password",
         onBack = onCancel
     ) {
@@ -35,7 +36,8 @@ fun ResetPasswordScreen(
             label = "New password",
             isError = uiState.password.isNotBlank() && !uiState.isPasswordValid,
             errorText = "Password must be at least 6 characters",
-            imeAction = ImeAction.Next
+            imeAction = ImeAction.Next,
+            onDone = {}
         )
 
         Spacer(Modifier.height(12.dp))
@@ -46,7 +48,10 @@ fun ResetPasswordScreen(
             label = "Confirm password",
             isError = uiState.confirmPassword.isNotBlank() && !uiState.passwordsMatch,
             errorText = "Passwords do not match",
-            imeAction = ImeAction.Done
+            imeAction = ImeAction.Done,
+            onDone = {
+                if (uiState.canSubmitNewPassword) onSubmit()
+            }
         )
 
         Spacer(Modifier.height(24.dp))

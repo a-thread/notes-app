@@ -1,6 +1,6 @@
 package com.example.notes.ui.shared.model
 
-import com.example.notes.ui.notedetail.model.ChecklistItem
+import com.example.notes.ui.detail.model.ChecklistItem
 
 sealed interface EditorBlock {
 

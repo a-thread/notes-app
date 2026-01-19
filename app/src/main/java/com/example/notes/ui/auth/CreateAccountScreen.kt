@@ -10,6 +10,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.notes.ui.auth.composables.*
 import com.example.notes.ui.shared.composable.AppButton
+import com.example.notes.ui.shared.composable.DetailScaffold
 
 @Composable
 fun CreateAccountScreen(
@@ -20,7 +21,7 @@ fun CreateAccountScreen(
     onSubmit: () -> Unit,
     onBack: () -> Unit
 ) {
-    AuthScaffold(
+    DetailScaffold(
         title = "Let's get started",
         subtitle = "Fill in your email and create your free account.",
         onBack = onBack
@@ -46,7 +47,8 @@ fun CreateAccountScreen(
             label = "Password",
             isError = uiState.password.isNotBlank() && !uiState.isPasswordValid,
             errorText = "Password must be at least 6 characters",
-            imeAction = ImeAction.Next
+            imeAction = ImeAction.Next,
+            onDone = {}
         )
 
         Spacer(Modifier.height(16.dp))
@@ -57,7 +59,12 @@ fun CreateAccountScreen(
             label = "Confirm password",
             isError = uiState.confirmPassword.isNotBlank() && !uiState.passwordsMatch,
             errorText = "Passwords do not match",
-            imeAction = ImeAction.Done
+            imeAction = ImeAction.Done,
+            onDone = {
+                if (uiState.canSubmitCreateAccount) {
+                    onSubmit()
+                }
+            }
         )
 
         Spacer(Modifier.height(32.dp))

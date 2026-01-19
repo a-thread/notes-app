@@ -1,4 +1,4 @@
-package com.example.notes.ui.notedetail.composables
+package com.example.notes.ui.detail.composables
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.example.notes.ui.shared.model.EditorBlock
-import com.example.notes.ui.notedetail.logic.parseEditorBlocks
+import com.example.notes.ui.detail.logic.parseEditorBlocks
 
 @Composable
 fun ReadOnlyNote(

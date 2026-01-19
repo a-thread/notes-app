@@ -1,4 +1,4 @@
-package com.example.notes.ui.notedetail.composables
+package com.example.notes.ui.detail.composables
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.*
@@ -14,7 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.graphics.Color
-import com.example.notes.ui.notedetail.logic.transformEditorInput
+import com.example.notes.ui.detail.logic.transformEditorInput
 
 @Composable
 fun EditableNote(

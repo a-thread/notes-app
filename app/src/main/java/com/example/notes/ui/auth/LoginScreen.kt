@@ -16,6 +16,7 @@ fun LoginScreen(
     viewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
     onCreateAccount: () -> Unit,
+    onAbout: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -67,6 +68,7 @@ fun LoginScreen(
                 viewModel.signIn(onLoginSuccess)
             },
             onCreateAccount = onCreateAccount,
+            onAbout = onAbout,
             onForgotPassword = onForgotPassword,
             modifier = Modifier.padding(padding)
         )

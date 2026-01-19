@@ -19,6 +19,7 @@ fun LoginLayout(
     onPasswordChange: (String) -> Unit,
     onSignIn: () -> Unit,
     onCreateAccount: () -> Unit,
+    onAbout: () -> Unit,
     onForgotPassword: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -32,13 +33,14 @@ fun LoginLayout(
         Text(
             text = "lichen",
             style = MaterialTheme.typography.displaySmall,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(bottom = 8.dp)
         )
 
         Text(
-            text = "Your notes, everywhere.",
+            text = "Ideas, resilient by design.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -66,8 +68,14 @@ fun LoginLayout(
             label = "Password",
             isError = uiState.password.isNotBlank() && !uiState.isPasswordValid,
             errorText = "Password must be at least 6 characters",
-            imeAction = ImeAction.Done
+            imeAction = ImeAction.Done,
+            onDone = {
+                if (uiState.canSubmit && !uiState.isLoading) {
+                    onSignIn()
+                }
+            }
         )
+
 
         Spacer(Modifier.height(32.dp))
 
@@ -84,7 +92,10 @@ fun LoginLayout(
             onClick = onForgotPassword,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text("Forgot password?")
+            Text(
+                "Forgot password?",
+                color = MaterialTheme.colorScheme.tertiary
+            )
         }
 
         Spacer(Modifier.height(8.dp))
@@ -93,7 +104,21 @@ fun LoginLayout(
             onClick = onCreateAccount,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text("Create an account")
+            Text(
+                "Create an account",
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        }
+
+        TextButton(
+            onClick = onAbout,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = "About Lichen",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.example.notes.domain.model.Note
 import com.example.notes.domain.repository.NoteRepository
-import com.example.notes.ui.notedetail.NoteDetailScreen
-import com.example.notes.ui.notedetail.NoteDetailViewModel
-import com.example.notes.ui.noteslist.NotesListScreen
-import com.example.notes.ui.noteslist.NotesListViewModel
+import com.example.notes.ui.detail.NoteDetailScreen
+import com.example.notes.ui.detail.NoteDetailViewModel
+import com.example.notes.ui.list.NotesListScreen
+import com.example.notes.ui.list.NotesListViewModel
 import java.util.UUID
 
 @Composable

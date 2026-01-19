@@ -1,4 +1,4 @@
-package com.example.notes.ui.notedetail.logic
+package com.example.notes.ui.detail.logic
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue

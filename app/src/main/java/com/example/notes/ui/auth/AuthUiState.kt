@@ -7,7 +7,8 @@ enum class AuthScreen {
     Login,
     ForgotPassword,
     ResetPassword,
-    CreateAccount
+    CreateAccount,
+    About
 }
 
 data class AuthUiState(

@@ -1,4 +1,4 @@
-package com.example.notes.ui.notedetail.model
+package com.example.notes.ui.detail.model
 
 data class ChecklistItem(
     val text: String,

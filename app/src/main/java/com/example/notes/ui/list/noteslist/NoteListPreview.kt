@@ -1,4 +1,4 @@
-package com.example.notes.ui.noteslist.composables
+package com.example.notes.ui.list.noteslist
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -13,7 +13,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.notes.ui.notedetail.logic.parseEditorBlocks
+import com.example.notes.ui.detail.logic.parseEditorBlocks
 import com.example.notes.ui.shared.model.EditorBlock
 
 @Composable

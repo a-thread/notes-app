@@ -1,4 +1,4 @@
-package com.example.notes.ui.notedetail
+package com.example.notes.ui.detail
 
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel

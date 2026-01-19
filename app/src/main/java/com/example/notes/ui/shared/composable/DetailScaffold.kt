@@ -1,4 +1,4 @@
-package com.example.notes.ui.auth.composables
+package com.example.notes.ui.shared.composable
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AuthScaffold(
+fun DetailScaffold(
     title: String,
     subtitle: String? = null,
     onBack: (() -> Unit)? = null,
@@ -27,7 +27,6 @@ fun AuthScaffold(
                 .padding(horizontal = 24.dp)
         ) {
 
-            // ───── Back button (independent) ─────
             onBack?.let {
                 IconButton(
                     onClick = it,
@@ -36,12 +35,11 @@ fun AuthScaffold(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // ───── Centered auth content ─────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -60,7 +58,7 @@ fun AuthScaffold(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 32.dp)
                     )
                 }

@@ -1,4 +1,4 @@
-package com.example.notes.ui.notedetail
+package com.example.notes.ui.detail
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -10,8 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.notes.ui.notedetail.composables.EditableNote
-import com.example.notes.ui.notedetail.composables.ReadOnlyNote
+import com.example.notes.ui.detail.composables.EditableNote
+import com.example.notes.ui.detail.composables.ReadOnlyNote
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,14 +31,24 @@ fun NoteDetailScreen(
     if (showDiscardDialog) {
         AlertDialog(
             onDismissRequest = { showDiscardDialog = false },
-            title = { Text("Discard changes?") },
-            text = { Text("Your changes will be lost.") },
+            title = {
+                Text(
+                    "Discard changes?",
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    "Your changes will be lost.",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
                         showDiscardDialog = false
                         if (viewModel.discardChanges()) {
-                            onDone() // navigate back to list
+                            onDone()
                         }
                     }
                 ) {
@@ -49,7 +59,8 @@ fun NoteDetailScreen(
                 TextButton(onClick = { showDiscardDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
@@ -60,6 +71,14 @@ fun NoteDetailScreen(
         topBar = {
             TopAppBar(
                 title = {},
+
+                // 🔹 Explicit colors for accessibility + consistency
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                ),
+
                 navigationIcon = {
                     IconButton(
                         onClick = {
@@ -75,17 +94,22 @@ fun NoteDetailScreen(
                                     Icons.Default.Close
                                 else
                                     Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
+                            contentDescription =
+                                if (mode == EditorMode.Edit)
+                                    "Discard changes"
+                                else
+                                    "Back"
                         )
                     }
                 },
+
                 actions = {
                     when (mode) {
                         EditorMode.ReadOnly -> {
                             IconButton(onClick = viewModel::enterEditMode) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit"
+                                    contentDescription = "Edit note"
                                 )
                             }
                         }
@@ -96,7 +120,7 @@ fun NoteDetailScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
-                                    contentDescription = "Save"
+                                    contentDescription = "Save note"
                                 )
                             }
                         }
@@ -109,7 +133,7 @@ fun NoteDetailScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxSize()
         ) {
             when (mode) {
