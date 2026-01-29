@@ -9,12 +9,15 @@ import com.athread.lichen.data.remote.supabase.SupabaseNoteRemoteDataSource
 import com.athread.lichen.domain.model.Note
 import com.athread.lichen.domain.repository.NoteRepository
 import com.athread.lichen.domain.repository.AuthRepository
+import com.athread.lichen.domain.model.NotesSort
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -36,15 +39,27 @@ class NoteRepositoryImpl(
             ?: error("No authenticated user")
 
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeNotes(): Flow<List<Note>> =
-        authRepository.userId.flatMapLatest { userId ->
-            if (userId == null) {
-                flowOf(emptyList())
-            } else {
-                noteDao.observeByUserId(userId.toString())
-                    .map { it.map { entity -> entity.toDomain() } }
-            }
+    override fun observeNotes(sort: NotesSort): Flow<List<Note>> =
+        flow {
+            val userId = requireUserId().toString()
+
+            emitAll(
+                when (sort) {
+                    NotesSort.DATE_NEWEST ->
+                        noteDao.observeNewest(userId)
+
+                    NotesSort.DATE_OLDEST ->
+                        noteDao.observeOldest(userId)
+
+                    NotesSort.TITLE_ASC ->
+                        noteDao.observeTitleAsc(userId)
+
+                    NotesSort.TITLE_DESC ->
+                        noteDao.observeTitleDesc(userId)
+                }.map { entities ->
+                    entities.map { it.toDomain() }
+                }
+            )
         }
 
     override suspend fun getNoteById(id: UUID): Note? =

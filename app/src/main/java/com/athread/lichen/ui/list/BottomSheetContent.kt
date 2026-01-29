@@ -22,11 +22,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.athread.lichen.domain.model.NotesSort
 
 @Composable
 fun BottomSheetContent(
     darkModeOverride: Boolean?,
     systemIsDark: Boolean,
+    currentSort: NotesSort,
+    onSortSelected: (NotesSort) -> Unit,
     onToggleDarkMode: (Boolean) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -56,6 +59,47 @@ fun BottomSheetContent(
             )
             context.startActivity(intent)
         }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        )
+
+        Text(
+            text = "Sort by",
+            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        SortItem(
+            text = "Newest first",
+            selected = currentSort == NotesSort.DATE_NEWEST
+        ) {
+            onSortSelected(NotesSort.DATE_NEWEST)
+        }
+
+        SortItem(
+            text = "Oldest first",
+            selected = currentSort == NotesSort.DATE_OLDEST
+        ) {
+            onSortSelected(NotesSort.DATE_OLDEST)
+        }
+
+        SortItem(
+            text = "Title A–Z",
+            selected = currentSort == NotesSort.TITLE_ASC
+        ) {
+            onSortSelected(NotesSort.TITLE_ASC)
+        }
+
+        SortItem(
+            text = "Title Z–A",
+            selected = currentSort == NotesSort.TITLE_DESC
+        ) {
+            onSortSelected(NotesSort.TITLE_DESC)
+        }
+
 
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 8.dp),
@@ -98,3 +142,31 @@ private fun BottomSheetItem(
             .clickable(onClick = onClick)
     )
 }
+
+@Composable
+private fun SortItem(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    ListItem(
+        headlineContent = {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        },
+        trailingContent = {
+            if (selected) {
+                Text(
+                    text = "✓",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    )
+}
+

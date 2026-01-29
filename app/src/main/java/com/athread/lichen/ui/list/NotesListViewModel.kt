@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.athread.lichen.domain.model.Note
 import com.athread.lichen.domain.repository.NoteRepository
+import com.athread.lichen.domain.model.NotesSort
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
@@ -24,10 +26,17 @@ class NotesListViewModel(
 ) : ViewModel() {
 
     private val isSyncing = MutableStateFlow(true)
+    val sort = MutableStateFlow(NotesSort.DATE_NEWEST)
 
+    fun setSort(sort: NotesSort) {
+        this.sort.value = sort
+    }
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<NotesUiState> =
         combine(
-            repository.observeNotes(),
+            sort.flatMapLatest { sort ->
+                repository.observeNotes(sort)
+            },
             isSyncing
         ) { notes, syncing ->
             when {

@@ -1,11 +1,12 @@
 package com.athread.lichen.domain.repository
 
 import com.athread.lichen.domain.model.Note
+import com.athread.lichen.domain.model.NotesSort
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 interface NoteRepository {
-    fun observeNotes(): Flow<List<Note>>
+    fun observeNotes(sort: NotesSort): Flow<List<Note>>
 
     suspend fun syncFromRemote()
 

@@ -44,7 +44,7 @@ fun NotesListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var recentlyDeletedNote by remember { mutableStateOf<Note?>(null) }
     val systemIsDark = isSystemInDarkTheme()
-
+    val currentSort by viewModel.sort.collectAsState()
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
@@ -172,6 +172,11 @@ fun NotesListScreen(
             BottomSheetContent(
                 darkModeOverride = darkModeOverride,
                 systemIsDark = darkModeOverride ?: systemIsDark,
+                currentSort = currentSort,
+                onSortSelected = {
+                    viewModel.setSort(it)
+                    showBottomSheet = false
+                },
                 onToggleDarkMode = { enabled ->
                     if (enabled) themeViewModel.setDark() else themeViewModel.setLight()
                     showBottomSheet = false
