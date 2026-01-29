@@ -89,4 +89,16 @@ class NotesListViewModel(
             }
         }
     }
+
+    fun importTextFile(
+        fileName: String,
+        content: String
+    ) {
+        viewModelScope.launch {
+            repository.importNoteFromTextFile(fileName, content)
+        }
+    }
+
+    suspend fun exportAllNotes(): String =
+        repository.exportNotesAsText()
 }

@@ -1,4 +1,4 @@
-package com.athread.lichen.ui.list
+package com.athread.lichen.ui.list.bottomsheet
 
 import android.content.Intent
 import androidx.compose.foundation.clickable
@@ -9,8 +9,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -29,8 +32,10 @@ fun BottomSheetContent(
     darkModeOverride: Boolean?,
     systemIsDark: Boolean,
     currentSort: NotesSort,
-    onSortSelected: (NotesSort) -> Unit,
     onToggleDarkMode: (Boolean) -> Unit,
+    onImport: () -> Unit,
+    onExport: () -> Unit,
+    onOpenSort: () -> Unit,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
@@ -41,6 +46,8 @@ fun BottomSheetContent(
             .padding(vertical = 8.dp)
     ) {
 
+        /* ───────────── Appearance ───────────── */
+
         BottomSheetItem(
             text = if (darkModeOverride == true) "Light mode" else "Dark mode",
             icon = Icons.Default.DarkMode
@@ -48,6 +55,38 @@ fun BottomSheetContent(
             val isCurrentlyDark = darkModeOverride ?: systemIsDark
             onToggleDarkMode(!isCurrentlyDark)
         }
+
+        /* ───────────── Import / Export ───────────── */
+
+        BottomSheetItem(
+            text = "Import from text file",
+            icon = Icons.Default.Upload
+        ) {
+            onImport()
+        }
+
+        BottomSheetItem(
+            text = "Export notes",
+            icon = Icons.Default.Download
+        ) {
+            onExport()
+        }
+
+        /* ───────────── Sort (split design) ───────────── */
+
+        BottomSheetItem(
+            text = "Sort notes · ${currentSort.label()}",
+            icon = Icons.AutoMirrored.Filled.Sort
+        ) {
+            onOpenSort()
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        )
+
+        /* ───────────── Support ───────────── */
 
         BottomSheetItem(
             text = "Support development",
@@ -65,46 +104,7 @@ fun BottomSheetContent(
             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
         )
 
-        Text(
-            text = "Sort by",
-            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        SortItem(
-            text = "Newest first",
-            selected = currentSort == NotesSort.DATE_NEWEST
-        ) {
-            onSortSelected(NotesSort.DATE_NEWEST)
-        }
-
-        SortItem(
-            text = "Oldest first",
-            selected = currentSort == NotesSort.DATE_OLDEST
-        ) {
-            onSortSelected(NotesSort.DATE_OLDEST)
-        }
-
-        SortItem(
-            text = "Title A–Z",
-            selected = currentSort == NotesSort.TITLE_ASC
-        ) {
-            onSortSelected(NotesSort.TITLE_ASC)
-        }
-
-        SortItem(
-            text = "Title Z–A",
-            selected = currentSort == NotesSort.TITLE_DESC
-        ) {
-            onSortSelected(NotesSort.TITLE_DESC)
-        }
-
-
-        HorizontalDivider(
-            modifier = Modifier.padding(vertical = 8.dp),
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-        )
+        /* ───────────── Account ───────────── */
 
         BottomSheetItem(
             text = "Logout",
@@ -116,6 +116,8 @@ fun BottomSheetContent(
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
+
+/* ───────────────────────── Helpers ───────────────────────── */
 
 @Composable
 private fun BottomSheetItem(
@@ -143,30 +145,12 @@ private fun BottomSheetItem(
     )
 }
 
-@Composable
-private fun SortItem(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    ListItem(
-        headlineContent = {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        },
-        trailingContent = {
-            if (selected) {
-                Text(
-                    text = "✓",
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    )
-}
+/* ───────────── Sort label helper ───────────── */
 
+private fun NotesSort.label(): String =
+    when (this) {
+        NotesSort.DATE_NEWEST -> "Newest first"
+        NotesSort.DATE_OLDEST -> "Oldest first"
+        NotesSort.TITLE_ASC -> "Title A–Z"
+        NotesSort.TITLE_DESC -> "Title Z–A"
+    }

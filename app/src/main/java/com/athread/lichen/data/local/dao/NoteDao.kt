@@ -12,34 +12,41 @@ interface NoteDao {
         WHERE userId = :userId
         ORDER BY updatedAt DESC
     """)
+    suspend fun getAllForUser(userId: String): List<NoteEntity>
+
+    @Query("""
+        SELECT * FROM note
+        WHERE userId = :userId
+        ORDER BY updatedAt DESC
+    """)
     fun observeByUserId(userId: String): Flow<List<NoteEntity>>
 
     @Query("""
-    SELECT * FROM note
-    WHERE userId = :userId
-    ORDER BY updatedAt DESC
-""")
+        SELECT * FROM note
+        WHERE userId = :userId
+        ORDER BY updatedAt DESC
+    """)
     fun observeNewest(userId: String): Flow<List<NoteEntity>>
 
     @Query("""
-    SELECT * FROM note
-    WHERE userId = :userId
-    ORDER BY updatedAt ASC
-""")
+        SELECT * FROM note
+        WHERE userId = :userId
+        ORDER BY updatedAt ASC
+    """)
     fun observeOldest(userId: String): Flow<List<NoteEntity>>
 
     @Query("""
-    SELECT * FROM note
-    WHERE userId = :userId
-    ORDER BY title COLLATE NOCASE ASC
-""")
+        SELECT * FROM note
+        WHERE userId = :userId
+        ORDER BY title COLLATE NOCASE ASC
+    """)
     fun observeTitleAsc(userId: String): Flow<List<NoteEntity>>
 
     @Query("""
-    SELECT * FROM note
-    WHERE userId = :userId
-    ORDER BY title COLLATE NOCASE DESC
-""")
+        SELECT * FROM note
+        WHERE userId = :userId
+        ORDER BY title COLLATE NOCASE DESC
+    """)
     fun observeTitleDesc(userId: String): Flow<List<NoteEntity>>
 
 

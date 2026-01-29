@@ -6,7 +6,6 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -14,17 +13,20 @@ fun SwipeToDelete(
     onDelete: () -> Unit,
     content: @Composable RowScope.() -> Unit
 ) {
-    val dismissState = rememberSwipeToDismissBoxState()
-
-    LaunchedEffect(dismissState.currentValue) {
-        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
-            onDelete()
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value: SwipeToDismissBoxValue ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+                true
+            } else {
+                false
+            }
         }
-    }
+    )
 
     SwipeToDismissBox(
         state = dismissState,
-        backgroundContent = { DeleteSwipeBackground() },
+        backgroundContent = { DeleteSwipeBackground() }
     ) {
         content()
     }

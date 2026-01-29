@@ -104,17 +104,21 @@ class NoteDetailViewModel(
         }
     }
 
+    suspend fun exportNote(): Pair<String, String> {
+        return repository.exportNoteAsText(noteId)
+    }
+
     private suspend fun persist(bodyText: String) {
         repository.saveNote(
             Note(
                 id = noteId,
-                userId = userId,              // ✅ REAL USER
+                userId = userId,
                 title = title.value.ifBlank { "Untitled" },
                 body = NoteBody.Text(bodyText),
                 createdAt = createdAt,
                 createdBy = createdBy,
                 updatedAt = Instant.now(),
-                updatedBy = userId,           // ✅ REAL USER
+                updatedBy = userId,
                 isPublic = false
             )
         )

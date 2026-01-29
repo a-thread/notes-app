@@ -7,6 +7,7 @@ import com.athread.lichen.data.mapper.toDomain
 import com.athread.lichen.data.mapper.toEntity
 import com.athread.lichen.data.remote.supabase.SupabaseNoteRemoteDataSource
 import com.athread.lichen.domain.model.Note
+import com.athread.lichen.domain.model.NoteBody
 import com.athread.lichen.domain.repository.NoteRepository
 import com.athread.lichen.domain.repository.AuthRepository
 import com.athread.lichen.domain.model.NotesSort
@@ -113,6 +114,85 @@ class NoteRepositoryImpl(
             // Then clean up missing notes (optional)
             val remoteIds = remoteNotes.map { it.id }.toSet()
             noteDao.deleteNotInIds(userId.toString(), remoteIds)
+        }
+    }
+
+    override suspend fun exportNoteAsText(
+        id: UUID
+    ): Pair<String, String> {
+        val note = noteDao.getById(id.toString())
+            ?.toDomain()
+            ?: error("Note not found")
+
+        val title = note.title.ifBlank { "Untitled" }
+        val body = (note.body as NoteBody.Text).text
+
+        val safeFileName =
+            title.replace(Regex("""[\\/:*?"<>|]"""), "_")
+
+        return "$safeFileName.txt" to body
+    }
+
+
+    override suspend fun exportNotesAsText(): String {
+        val userId = requireUserId().toString()
+        val notes = noteDao.getAllForUser(userId)
+            .map { it.toDomain() }
+
+        val builder = StringBuilder()
+
+        builder.appendLine("# Lichen Notes Export")
+        builder.appendLine("# version: 1")
+        builder.appendLine()
+
+        notes.forEach { note ->
+            builder.appendLine("---")
+            builder.appendLine("id: ${note.id}")
+            builder.appendLine("createdAt: ${note.createdAt}")
+            builder.appendLine("updatedAt: ${note.updatedAt}")
+            builder.appendLine("---")
+            builder.appendLine()
+            builder.appendLine("# ${note.title}")
+            builder.appendLine(
+                (note.body as NoteBody.Text).text
+            )
+            builder.appendLine()
+        }
+
+        return builder.toString()
+    }
+
+    override suspend fun importNoteFromTextFile(
+        fileName: String,
+        content: String
+    ) {
+        val userId = requireUserId()
+        val now = Instant.now()
+
+        val title = fileName
+            .removeSuffix(".txt")
+            .ifBlank { "Untitled" }
+
+        val note = Note(
+            id = UUID.randomUUID(),
+            userId = userId,
+            title = title,
+            body = NoteBody.Text(content.trim()),
+            createdAt = now,
+            createdBy = userId,
+            updatedAt = now,
+            updatedBy = userId,
+            isPublic = false
+        )
+
+        noteDao.upsert(note.toEntity())
+
+        externalScope.launch {
+            try {
+                remote.upsertNote(note)
+            } catch (e: Exception) {
+                Log.e("NoteRepository", "Remote import failed", e)
+            }
         }
     }
 }

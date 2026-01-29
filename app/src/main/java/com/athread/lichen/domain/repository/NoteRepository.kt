@@ -15,4 +15,13 @@ interface NoteRepository {
     suspend fun saveNote(note: Note)
 
     suspend fun deleteNote(id: UUID)
+
+    suspend fun exportNoteAsText(id: UUID): Pair<String, String>
+
+    suspend fun exportNotesAsText(): String
+
+    suspend fun importNoteFromTextFile(
+        fileName: String,
+        content: String
+    )
 }
