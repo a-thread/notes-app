@@ -3,6 +3,8 @@ package com.athread.lichen.ui.detail
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -115,13 +117,10 @@ fun NoteDetailScreen(
                     when (mode) {
                         EditorMode.ReadOnly -> {
 
-                            /* ───── Export ───── */
-
                             IconButton(
                                 onClick = {
                                     scope.launch {
-                                        val (fileName, _) =
-                                            viewModel.exportNote()
+                                        val (fileName, _) = viewModel.exportNote()
                                         exportLauncher.launch(fileName)
                                     }
                                 }
@@ -129,11 +128,9 @@ fun NoteDetailScreen(
                                 Icon(
                                     imageVector = Icons.Default.Download,
                                     contentDescription = "Export note",
-                                    tint = MaterialTheme.colorScheme.onTertiary
+                                    tint = MaterialTheme.colorScheme.secondary
                                 )
                             }
-
-                            /* ───── Edit ───── */
 
                             IconButton(
                                 onClick = viewModel::enterEditMode,
@@ -167,11 +164,22 @@ fun NoteDetailScreen(
         }
     ) { padding ->
 
+        val scrollModifier =
+            if (mode == EditorMode.ReadOnly)
+                Modifier.verticalScroll(rememberScrollState())
+            else
+                Modifier
+
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .fillMaxSize()
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 0.dp,
+                    bottom = 12.dp
+                ).fillMaxSize()
+                .then(scrollModifier)
         ) {
             when (mode) {
                 EditorMode.ReadOnly -> {

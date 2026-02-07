@@ -8,8 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.athread.lichen.ui.shared.model.EditorBlock
 import com.athread.lichen.ui.detail.logic.parseEditorBlocks
+import com.athread.lichen.ui.shared.model.EditorBlock
 
 @Composable
 fun ReadOnlyNote(
@@ -19,15 +19,23 @@ fun ReadOnlyNote(
     onToggleChecklist: (Int) -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
+
+        /* ---------- TITLE ---------- */
+
         if (title.isNotBlank()) {
             Text(
-                title,
-                style = MaterialTheme.typography.headlineSmall
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(Modifier.height(12.dp))
         }
+
+        /* ---------- BODY ---------- */
 
         val blocks = remember(body) {
             TextFieldValue(body).parseEditorBlocks()
@@ -38,8 +46,9 @@ fun ReadOnlyNote(
                 is EditorBlock.TextBlock -> {
                     if (block.text.isNotBlank()) {
                         Text(
-                            block.text,
-                            style = MaterialTheme.typography.bodyLarge
+                            text = block.text,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(Modifier.height(8.dp))
                     }

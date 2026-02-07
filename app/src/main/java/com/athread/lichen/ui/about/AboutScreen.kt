@@ -16,7 +16,7 @@ fun AboutScreen(
     onBack: () -> Unit
 ) {
     DetailScaffold(
-        title = "com.athread.lichen",
+        title = "lichen",
         subtitle = "Ideas, resilient by design.",
         onBack = onBack
     ) {
