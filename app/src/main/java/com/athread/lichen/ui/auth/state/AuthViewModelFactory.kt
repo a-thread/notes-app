@@ -1,4 +1,4 @@
-package com.athread.lichen.ui.auth
+package com.athread.lichen.ui.auth.state
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
